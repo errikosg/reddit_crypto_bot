@@ -1,0 +1,19 @@
+{
+  "name": "reddit-crypto-bot",
+  "version": "1.0.0",
+  "description": "A reddit bot that crawls reddit and finds trending cryptocurrencies",
+  "main": "index.js",
+  "scripts": {
+    "dev": "env-cmd -f ./.config/.env nodemon src/index.js",
+    "test": "echo 'Problem'"
+  },
+  "author": "errikos",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "env-cmd": "^10.1.0",
+    "express": "^4.17.1",
+    "mongodb": "^3.6.5",
+    "mongoose": "^5.12.3"
+  }
+}
