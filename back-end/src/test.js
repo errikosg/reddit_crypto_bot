@@ -1,4 +1,5 @@
 var fs = require('fs');
+const AB_HashTable = require("./helper/AB_hashtable")
 
 /*-------------------------------------*/
 // helpful funcs
@@ -25,6 +26,12 @@ const saveJSON = (path, data) => {
         }
     );
 }
+
+const clearComments = (raw_data) => {
+    return raw_data.map( (item) => {
+        return {id: item.id, body: item.body}
+    })
+}
 /*-------------------------------------*/
 
 
@@ -48,77 +55,9 @@ console.log(data[0])*/
 
 /*-------------------------------------*/
 // HashTable class to store comments
-const comments = [["ena", "duo", "tria"], ["ena", "ena"], ["duo", "tria", "tessera"]]
-class AB_HashTable {
-    // hashtable that stores strings alphabetically only
-    constructor(){
-        this.indexArrayLength = 26
-        this.indexArray = [];
-        for(var i=0; i<this.indexArrayLength; i++)
-            this.indexArray.push({})
-    }
+// const comments = [["ena", "duo", "tria"], ["ena", "ena"], ["duo", "tria", "tessera"]]
 
-    printHT(){
-        console.log("# Printing structure:\n")
-        console.log(this.indexArray)
-        console.log("\n")
-    }
-
-    populate(comments){
-        // populate the hash table with the given words
-        // for each letter, we have a dictionary with each word's frequency
-        console.log("# Populating.")
-        for(var s of comments){
-            for(var word of s){
-                const index = alphaVal(word[0])
-                // console.log(word + " has index " + index)
-                if(word in this.indexArray[index]){
-                    // console.log(word + " found. Updating at index " + index)
-                    this.indexArray[index][word] += 1
-                }
-                else{
-                    // console.log(word + " not found. Inserting at index " + index)
-                    this.indexArray[index][word]= 1
-                }
-            }
-        }
-    }
-
-    searchSingle(obj){
-        // for a single given coin, find its frequency
-        console.log("# Searching single.")
-        const name = obj.name.toLowerCase()
-        const symbol = obj.symbol.toLowerCase()
-        const index = alphaVal(name[0])
-        var freq = 0;
-
-        // below we make sure that both name and symbol are searched
-        if(name in this.indexArray[index])
-            freq += this.indexArray[index][name]
-        if(symbol != name && symbol in this.indexArray[index])      // check if symbol and name are the same
-            freq += this.indexArray[index][symbol]
-        return freq
-    }
-
-    searchArray(array){
-        // given an array of words(cryptos), find the frequency for each one
-        console.log("# Searching array.")
-        var freqs = []
-        for (const obj of array){
-            const name = obj.name.toLowerCase()
-            const symbol = obj.symbol.toLowerCase()
-            const index = alphaVal(name[0])
-            var freq = 0
-            if(name in this.indexArray[index])
-                freq += this.indexArray[index][name]
-            if(symbol != name && symbol in this.indexArray[index])      // check if symbol and name are the same
-                freq += this.indexArray[index][symbol]
-            freqs.push({name:obj.name, symbol: obj.symbol, frequency: freq})
-        }
-        return freqs
-    }
-}
-var ht = new AB_HashTable()
+/*var ht = new AB_HashTable()
 ht.populate(comments)
 ht.printHT()
 console.log(ht.searchSingle({ name: 'ENA', symbol: '1' }))
@@ -135,4 +74,87 @@ console.log(result)
 console.log("Sorting")
 var sorted = arraySort(result, 'frequency')
 console.log(sorted)
-saveJSON("./crypto-cache/freqs.json", sorted)
+saveJSON("./crypto-cache/freqs.json", sorted)*/
+
+/*-----------------------------------------------------------*/
+// test tokenization
+// let comments2 = [
+//     "i me Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed consectetur elementum lacus, aliquam mattis nisi dictum sit amet. Praesent aliquam purus sit amet nunc tempus, at mattis enim porttitor. Maecenas in auctor nibh. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus",
+//     "Integer sed euismod ante, vel consequat nibh. Praesent accumsan aliquet consequat. Etiam nec tempor dui, et cursus purus. Sed eget consequat massa, eget vulputate tellus. In commodo, lacus eget vehicula imperdiet, nisl elit semper ante, ut porttitor ipsum massa nec leo.",
+//     "Integer quis turpis tincidunt, convallis eros eget, semper dui. Cras et malesuada elit"
+// ]
+
+let stopwords = ['i','me','my','myself','we','our','ours','ourselves','you','your','yours','yourself','yourselves','he','him','his','himself','she','her','hers','herself','it','its','itself','they','them','their','theirs','themselves','what','which','who','whom','this','that','these','those','am','is','are','was','were','be','been','being','have','has','had','having','do','does','did','doing','a','an','the','and','but','if','or','because','as','until','while','of','at','by','for','with','about','against','between','into','through','during','before','after','above','below','to','from','up','down','in','out','on','off','over','under','again','further','then','once','here','there','when','where','why','how','all','any','both','each','few','more','most','other','some','such','no','nor','not','only','own','same','so','than','too','very','s','t','can','will','just','don','should','now']
+let regex = /[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]/g;
+
+/*let text = comments2[0]
+console.log(text)
+
+// punctuation
+let text_new = text.replace(regex,'')
+console.log(text_new)
+// tokenization
+let tokens = text_new.split(/\s|\b/)        // split
+// stopwords
+clean = []
+for(let i=0; i<tokens.length; i++){
+    // console.log(t)
+    if(!tokens[i] in stopwords)
+        clean.push(tokens[i])
+}*/
+
+/*-----------------------------------------------------------*/
+// read comments from reddit
+const axios = require('axios');
+
+// let url = "https://api.pushshift.io/reddit/search/comment/?subreddit=CryptoCurrency&before=1d&size=200"
+// axios.get(url)
+//   .then(function (response) {
+//     // handle success
+//     console.log(response.data.data);
+//     saveJSON("./crypto-cache/response2.json", response.data.data)
+//   })
+//   .catch(function (error) {
+//     // handle error
+//     console.log(error);
+//   })
+
+
+/* ---------------------------------------*/
+// // lets check!
+// const raw_data = JSON.parse(fs.readFileSync('./crypto-cache/response2.json', {encoding:'utf8', flag:'r'}));
+
+let {clearRedditResponse, make_GETRequest} = require("./helper/functions.js")
+// const [ ids, comment_tokens ] = clearRedditResponse(raw_data)
+// // console.log(comment_tokens)
+// // console.log(ids.size)
+
+// // insert in hashtable
+// var ht = new AB_HashTable()
+// ht.populate(comment_tokens)
+// // ht.printHT()
+// let freq = ht.searchSingle({"name":"Ethereum","symbol":"ETH"})
+// console.log(freq)
+
+// let coinlist = JSON.parse(fs.readFileSync("./crypto-cache/data.json", {encoding:'utf8', flag:'r'}));
+// let result = ht.searchArray(coinlist)
+// console.log(result)
+
+// console.log("\n\nSorting")
+// var sorted = arraySort(result, 'frequency')
+// console.log(sorted)
+
+/* ---------------------------------------*/
+// get all comments in specified date range!
+// url template: 'https://api.pushshift.io/reddit/search/submission?subreddit={}&after={}&before={}&size={}'
+// given id, url template: https://api.pushshift.io/reddit/search/comment/?subreddit={}&after={}&before={}&size={}&link_id={}
+async function reddit_GETComments (subreddit, after, size, link_id) {
+    url = "https://api.pushshift.io/reddit/search/comment/"
+    let params = {
+        subreddit:subreddit, after:after, size:size, link_id:link_id
+    }
+    let response = await make_GETRequest(url, 2, null, params)
+    console.log(response.data)
+}
+
+// reddit_GETComments("CryptoCurrency", "1d", 200, "mlpfu2")
