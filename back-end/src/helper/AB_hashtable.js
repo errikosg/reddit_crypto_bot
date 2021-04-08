@@ -1,12 +1,35 @@
-const {alphaVal, arraySort} = require("../helper/functions.js")
+// module.exports = 
 
+// helping functions
+function alphaVal(s) {
+    return s.toLowerCase().charCodeAt(0) - 97
+}
+
+function stringComp(s1, s2) {
+    return s1.toLowerCase() === s2.toLowerCase()
+}
+
+function arraySort(data, column) {
+    data.sort(function(res01, res02) {
+        var arg01 = res01[column];
+        var arg02 = res02[column];
+        if(arg01 > arg02) { return -1; }
+        if(arg01 < arg02) { return 1; }
+        return 0;
+    })
+    return data;
+}
+
+/* ---------------------------------------------------*/
+// class
 module.exports = class AB_HashTable {
-    // hashtable that stores strings alphabetically only
+    // hashtable that stores strings alphabetically
     constructor(){
-        this.indexArrayLength = 26
-        this.indexArray = [];
+        this.indexArrayLength = 26                  // alphabetical store
+        this.indexArray = [];                       // hashtable
         for(var i=0; i<this.indexArrayLength; i++)
             this.indexArray.push({})
+        this.unique_id_set = new Set()              // to populate hashtable with unique comments only
     }
 
     printHT(){
@@ -18,25 +41,30 @@ module.exports = class AB_HashTable {
     populate(comments){
         // populate the hash table with the given words
         // for each letter, we have a dictionary with each word's frequency
-        console.log("# Populating.")
-        for(var s of comments){
-            // console.log(s)
-            for(var word of s){
-                if(word[0] == undefined)
-                    continue
-                // console.log(word)
-                const index = alphaVal(word[0])
-                // console.log(word + " has index " + index)
-                if(word in this.indexArray[index]){
-                    // console.log(word + " found. Updating at index " + index)
-                    this.indexArray[index][word] += 1
+        console.log("# Populating:")
+        let count = 0
+        for(let pair of comments){
+            //check if comment is unique
+            if(!this.unique_id_set.has(pair.id)){
+                this.unique_id_set.add(pair.id)
+                let comment_body = pair.body
+                for(let word of comment_body){
+                    if(word[0] == undefined)
+                        continue
+                    const index = alphaVal(word[0])
+                    if(word in this.indexArray[index]){
+                        // word found, updating frequency
+                        this.indexArray[index][word] += 1
+                    }
+                    else{
+                        // word not found, inserting
+                        this.indexArray[index][word]= 1
+                    }
                 }
-                else{
-                    // console.log(word + " not found. Inserting at index " + index)
-                    this.indexArray[index][word]= 1
-                }
+                count += 1
             }
         }
+        console.log("\t " + count +" comments were unique")
     }
 
     searchSingle(obj){

@@ -1,133 +1,6 @@
 const fs = require('fs');
 const axios = require('axios');
-
-// module.exports = {
-//     alphaVal: function(s) {
-//         return s.toLowerCase().charCodeAt(0) - 97
-//     },
-
-//     stringComp: function(s1, s2) {
-//         return s1.toLowerCase() === s2.toLowerCase()
-//     },
-
-//     arraySort: function (data, column) {
-//         data.sort(function(res01, res02) {
-//             var arg01 = res01[column];
-//             var arg02 = res02[column];
-//             if(arg01 > arg02) { return -1; }
-//             if(arg01 < arg02) { return 1; }
-//             return 0;
-//         })
-//         return data;
-//     },
-
-//     saveJSON: function (path, data) {
-//         fs.writeFile (path, JSON.stringify(data), function(err) {
-//             if (err) throw err;
-//             console.log('# File saved at: ' + path);
-//             }
-//         );
-//     },
-
-//     checkCacheFlag: function(request, response, next){
-//         request.app.cacheFlag = (request.headers['custom-cache-data']==1) ? true : false
-//         next();
-//     },
-
-//     make_GETRequest: async function (url, max_retries, headers, params){
-//         // function to make typical GET request
-
-//         let current_tries = 1
-//         while(current_tries <= max_retries) {
-//             // try 5 times before giving up
-//             let response = await axios({
-//                 url: url,
-//                 method: 'get',
-//                 headers: headers,
-//                 params
-//             })
-//             if(response.status == 200)
-//                 return response
-//             current_tries+=1
-//         }
-//         return response
-//     }, 
-
-//     clearCoinlist: function (raw_data) {
-//         return raw_data.map( (item) => {
-//             return {name: item.name, symbol: item.symbol}
-//         })
-//     },
-
-//     clearRedditResponse: function (raw_data) {
-//         // input: reddit response
-//         // return: { unique set of ids, array of cleared sentence tokens }
-
-//         notletterCheck = function(c) {
-//             // true: not letter / false: letter
-//             let cval = c.charCodeAt(0)
-//             return (cval<'A'.charCodeAt(0) || cval>'z'.charCodeAt(0))
-//         }
-
-//         let stopwords = ['i','me','my','myself','we','our','ours','ourselves','you','your','yours','yourself','yourselves','he','him','his','himself','she','her','hers','herself','it','its','itself','they','them','their','theirs','themselves','what','which','who','whom','this','that','these','those','am','is','are','was','were','be','been','being','have','has','had','having','do','does','did','doing','a','an','the','and','but','if','or','because','as','until','while','of','at','by','for','with','about','against','between','into','through','during','before','after','above','below','to','from','up','down','in','out','on','off','over','under','again','further','then','once','here','there','when','where','why','how','all','any','both','each','few','more','most','other','some','such','no','nor','not','only','own','same','so','than','too','very','s','t','can','will','just','don','should','now']
-//         let regex = /[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]/g;
-//         let raw_comms = raw_data.map( (item) => {
-//             return {id: item.id, body: item.body}
-//         })
-//         const ids = new Set()
-//         // seperate ids and bodies
-//         let comms = []
-//         for(let obj of raw_comms){
-//             comms.push(obj.body)
-//             ids.add(obj.id)
-//         }
-//         // clear punctuation
-//         let clear_comms = []
-//         for(let c of comms){
-//             let cc = c.replace(regex,'')
-//             clear_comms.push(cc)
-//         }
-//         //tokenize
-//         let tokens = []
-//         for(let c of clear_comms){
-//             let arr = c.split(/\s|\b/)
-//             tokens.push(arr)
-//         }
-//         // remove stowords
-//         let cleared_tokens = []
-//         for(let arr of tokens){
-//             let new_arr = []
-//             // check each word independently
-//             for(let i=0; i<arr.length; i++){
-//                 let lowered = arr[i].toLowerCase()
-//                 if(!(stopwords.includes(lowered)) && lowered != undefined && lowered.length > 0 && !notletterCheck(lowered)){
-//                     new_arr.push(lowered)
-//                 }
-//             }
-//             cleared_tokens.push(new_arr)
-//         }
-//         return [ ids, cleared_tokens ]
-//     }
-// }
-
-function alphaVal(s) {
-    return s.toLowerCase().charCodeAt(0) - 97
-}
-
-function stringComp(s1, s2) {
-    return s1.toLowerCase() === s2.toLowerCase()
-}
-
-function arraySort(data, column) {
-    data.sort(function(res01, res02) {
-        var arg01 = res01[column];
-        var arg02 = res02[column];
-        if(arg01 > arg02) { return -1; }
-        if(arg01 < arg02) { return 1; }
-        return 0;
-    })
-    return data;
-}
+const AB_HashTable = require("./AB_hashtable")
 
 function saveJSON(path, data) {
     fs.writeFile (path, JSON.stringify(data), function(err) {
@@ -182,72 +55,85 @@ function clearRedditResponse(raw_data) {
     let regex = /[^\w\s]|_/g;
 
 
-    let raw_comms = raw_data.map( (item) => {
-        return {id: item.id, body: item.body}
+    let comms = raw_data.map( (item) => {
+        return {id: item.id, created_utc: item.created_utc, body: item.body}
     })
-    const ids = new Set()
-    // seperate ids and bodies
-    let comms = []
-    for(let obj of raw_comms){
-        comms.push(obj.body)
-        ids.add(obj.id)
-    }
-    // clear punctuation
-    let clear_comms = []
-    for(let c of comms){
-        let cc = c.replace(link_regex,'').replace(regex, "").replace(/\s+/g, " ");
-        clear_comms.push(cc)
-    }
-    //tokenize
-    let tokens = []
-    for(let c of clear_comms){
-        let arr = c.split(/\s|\b/)
-        tokens.push(arr)
-    }
-    // remove stowords
-    let cleared_tokens = []
-    for(let arr of tokens){
-        let new_arr = []
-        // check each word independently
-        for(let i=0; i<arr.length; i++){
-            let lowered = arr[i].toLowerCase()
+
+    // template: array of {id , created_utc, body}
+    for(let pair of comms){
+        pair.body = pair.body.replace(link_regex,'').replace(regex, "").replace(/\s+/g, " ");   // clear punctuation
+        let arr = pair.body.split(/\s|\b/)
+        pair.body = arr                                                                         // tokenize
+        arr = []            // clear to use again
+        for(let i=0; i<pair.body.length; i++){                                                  // remove stopwords and more
+            let lowered = pair.body[i].toLowerCase()
             if(!(stopwords.includes(lowered)) && lowered != undefined && lowered.length > 0 && !notletterCheck(lowered)){
-                new_arr.push(lowered)
+                arr.push(lowered)
             }
         }
-        cleared_tokens.push(new_arr)
+        pair.body = arr
     }
-    return [ ids, cleared_tokens ]
+    return comms
 }
 
 async function GET_DailyDiscussions(day_count) {
     // get the daily discussion submissions of the last <day_count> days
     const url = "https://api.pushshift.io/reddit/search/submission/"
+    const reddit_author = "AutoModerator"       // hardcode "automoderator" as author to only get the daily discussion!
     let after = day_count+"d"
     const params = {
         "after": after,
         "subreddit": "CryptoCurrency",
-        "author": "AutoModerator"
+        "author": reddit_author
     }
     let response = await make_GETRequest(url, 3, null, params)
-    return response.data.data   // return the data array
+    return response.data.data       // return the data array
 }
 
-async function GET_RedditComments(day_count) {
+async function GET_AllRedditComments(day_count, ht) {
     // get all the comments for the specified days given - here we assume for now day_count=1
-    // input: day_count = number of daily discussions to scrap
-    // output:
+    // input: day_count=number of daily discussions to scrap / ht=hashtable to store comments
+    // output: hashtabe with all comments
 
+    // set constants
     day_count = 1   // fix!
+    console.log("# Getting daily discussion list.")
     const daily_discussions = await GET_DailyDiscussions(day_count)
     const url = "https://api.pushshift.io/reddit/search/comment/"
+    const max_size = 100        // important! always check the official API and update if changed
+    const max_iter = 20         // max iteration to end search - for testing
+
+    // handle requests
+    let params = {
+        "subreddit":"CryptoCurrency", "size":max_size, "link_id":"", "before":"" 
+    }
     for(let post of daily_discussions){
         const post_id = post.id
-        
+        console.log("# Getting comments for post: " + post_id)
+
+        params.before = Date.now()
+        params.link_id = post_id
+        const response = await make_GETRequest(url, 2, null, params)
+        let data = response.data.data
+        let count = 0
+        while(data != undefined && data.length == max_size && count < max_iter){
+            const comments = clearRedditResponse(data) 
+            ht = new AB_HashTable()
+            ht.populate(comments)
+
+            // fix next iteration
+            params.before = data[data.length-1].created_utc
+            const response = await make_GETRequest(url, 2, null, params)
+            data = response.data.data
+            count += 1
+            setTimeout(() => {  console.log("Iteration " + (count+1)); }, 500);
+        }
+
+        return ht
     }
 }
 
 
 // export all functions
 module.exports = 
-{ alphaVal:alphaVal, stringComp:stringComp, arraySort:arraySort, saveJSON:saveJSON, checkCacheFlag:checkCacheFlag, make_GETRequest:make_GETRequest, clearCoinlist:clearCoinlist, clearRedditResponse:clearRedditResponse, GET_RedditComments:GET_RedditComments };
+{ saveJSON:saveJSON, checkCacheFlag:checkCacheFlag, make_GETRequest:make_GETRequest, clearCoinlist:clearCoinlist, clearRedditResponse:clearRedditResponse, GET_AllRedditComments:GET_AllRedditComments };
