@@ -32,6 +32,16 @@ module.exports = class AB_HashTable {
         this.unique_id_set = new Set()              // to populate hashtable with unique comments only
     }
 
+    getSize(){
+        // returns data structure size
+        let [size, count] = [0,0]
+        while(count < this.indexArrayLength){
+            size += Object.keys(this.indexArray[count]).length
+            count += 1
+        }
+        return size
+    }
+
     printHT(){
         console.log("# Printing structure:\n")
         console.log(this.indexArray)
@@ -58,7 +68,7 @@ module.exports = class AB_HashTable {
                     }
                     else{
                         // word not found, inserting
-                        this.indexArray[index][word]= 1
+                        this.indexArray[index][word] = 1
                     }
                 }
                 count += 1
@@ -70,8 +80,10 @@ module.exports = class AB_HashTable {
     searchSingle(obj){
         // for a single given coin, find its frequency
         console.log("# Searching single.")
-        const name = obj.name.toLowerCase()
-        const symbol = obj.symbol.toLowerCase()
+        // const name = obj.name.toLowerCase()
+        // const symbol = obj.symbol.toLowerCase()
+        const name = obj.name
+        const symbol = obj.symbol
         const index = alphaVal(name[0])
         var freq = 0;
 
@@ -88,8 +100,10 @@ module.exports = class AB_HashTable {
         console.log("# Searching array.")
         var freqs = []
         for (const obj of array){
-            const name = obj.name.toLowerCase()
-            const symbol = obj.symbol.toLowerCase()
+            // const name = obj.name.toLowerCase()
+            // const symbol = obj.symbol.toLowerCase()
+            const name = obj.name
+            const symbol = obj.symbol
             const index = alphaVal(name[0])
             if(index < 0 || index > 25){
                 // in case a coin doesnt start with letter (fix?)

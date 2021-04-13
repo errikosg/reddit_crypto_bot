@@ -1,0 +1,18 @@
+openapi: "3.0.2"
+info:
+  description: Reddit Crypto Bot API description
+  title: Control Center
+  version: 1.0.0
+paths:
+  /frequencies/daily:
+    get:
+      tags:
+        - frequencies-daily
+      summary: Get coin mention frequency from Daily Discussion post.
+      description: Finds the Daily Discussion post in /r/Cryptocurrency and for every coin measures how many times it is measured.
+      operationId: frequencies-daily
+      responses:
+        '200':
+          description: Successful response
+        '500':
+          description: Internal server error

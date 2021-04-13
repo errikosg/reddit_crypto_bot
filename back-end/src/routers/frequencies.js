@@ -9,7 +9,7 @@ const coin_list_path = "./src/crypto-cache/coinlist.json"       // path to hold 
 const sorted_freq_path = "./src/crypto-cache/sorted_freqs.json"
 
 // endpoints
-router.get("/frequencies", checkCacheFlag, async (req, res, next) => {
+router.get("/frequencies/daily", checkCacheFlag, async (req, res, next) => {
     try{
         // get frequencies for all coins
         let coinlist = []
@@ -35,9 +35,11 @@ router.get("/frequencies", checkCacheFlag, async (req, res, next) => {
         // get all comments from reddit
         var comment_ht = new AB_HashTable()
         comment_ht = await GET_AllRedditComments(1, comment_ht)
-        let sorted = comment_ht.searchArray_sorted(coinlist)        // get the sorted list!
-        console.log(sorted)
-        saveJSON(sorted_freq_path, sorted)          // cache
+        if(comment_ht.getSize() > 0){   // check if hashtable is populated
+            let sorted = comment_ht.searchArray_sorted(coinlist)        // get the sorted list!
+            console.log(sorted)
+            saveJSON(sorted_freq_path, sorted)          // cache
+        }
     } catch (e) {
         console.log(e)
         res.status(500).send();

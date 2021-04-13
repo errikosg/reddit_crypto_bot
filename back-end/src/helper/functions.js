@@ -66,7 +66,8 @@ function clearRedditResponse(raw_data) {
         pair.body = arr                                                                         // tokenize
         arr = []            // clear to use again
         for(let i=0; i<pair.body.length; i++){                                                  // remove stopwords and more
-            let lowered = pair.body[i].toLowerCase()
+            // let lowered = pair.body[i].toLowerCase()
+            let lowered = pair.body[i]
             if(!(stopwords.includes(lowered)) && lowered != undefined && lowered.length > 0 && !notletterCheck(lowered)){
                 arr.push(lowered)
             }
@@ -90,6 +91,24 @@ async function GET_DailyDiscussions(day_count) {
     return response.data.data       // return the data array
 }
 
+async function GET_dailydisc_test(){
+    // for testing, in case PushShift is down
+    const url = "https://api.pushshift.io/reddit/search/submission/"
+    const reddit_author = "AutoModerator"       // hardcode "automoderator" as author to only get the daily discussion!
+    const params = {
+        "subreddit": "CryptoCurrency",
+        "author": reddit_author
+    }
+    let response = await make_GETRequest(url, 3, null, params)
+    let data = response.data.data
+
+    // return either the first entry, or empty array
+    if(data.length > 0)
+        return [data[0]]
+    else
+        return []
+}
+
 async function GET_AllRedditComments(day_count, ht) {
     // get all the comments for the specified days given - here we assume for now day_count=1
     // input: day_count=number of daily discussions to scrap / ht=hashtable to store comments
@@ -98,7 +117,12 @@ async function GET_AllRedditComments(day_count, ht) {
     // set constants
     day_count = 1   // fix!
     console.log("# Getting daily discussion list.")
-    const daily_discussions = await GET_DailyDiscussions(day_count)
+    // const daily_discussions = await GET_DailyDiscussions(day_count)
+    const daily_discussions = await GET_dailydisc_test()        // for testing, in case PushShift is down
+    if(daily_discussions.length == 0){
+        console.log("# No daily discussions for the day range given.")
+        return ht
+    }
     const url = "https://api.pushshift.io/reddit/search/comment/"
     const max_size = 100        // important! always check the official API and update if changed
     const max_iter = 20         // max iteration to end search - for testing
@@ -118,15 +142,13 @@ async function GET_AllRedditComments(day_count, ht) {
         let count = 0
         while(data != undefined && data.length == max_size && count < max_iter){
             const comments = clearRedditResponse(data) 
-            ht = new AB_HashTable()
-            ht.populate(comments)
+            await ht.populate(comments)
 
             // fix next iteration
             params.before = data[data.length-1].created_utc
             const response = await make_GETRequest(url, 2, null, params)
             data = response.data.data
-            count += 1
-            setTimeout(() => {  console.log("Iteration " + (count+1)); }, 500);
+            setTimeout(() => {  count+= 1;  }, 500);        // wait a little to request again
         }
 
         return ht
@@ -136,4 +158,4 @@ async function GET_AllRedditComments(day_count, ht) {
 
 // export all functions
 module.exports = 
-{ saveJSON:saveJSON, checkCacheFlag:checkCacheFlag, make_GETRequest:make_GETRequest, clearCoinlist:clearCoinlist, clearRedditResponse:clearRedditResponse, GET_AllRedditComments:GET_AllRedditComments };
+{ saveJSON:saveJSON, checkCacheFlag:checkCacheFlag, make_GETRequest:make_GETRequest, clearCoinlist:clearCoinlist, clearRedditResponse:clearRedditResponse, GET_AllRedditComments:GET_AllRedditComments, GET_dailydisc_test:GET_dailydisc_test };
