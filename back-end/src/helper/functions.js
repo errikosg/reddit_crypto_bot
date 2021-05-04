@@ -2,49 +2,52 @@ const fs = require('fs');
 const axios = require('axios');
 const AB_HashTable = require("./AB_hashtable")
 
+// Save object as json file
 function saveJSON(path, data) {
-    fs.writeFile (path, JSON.stringify(data), function(err) {
+    fs.writeFile (path, JSON.stringify(data), (err) => {
         if (err) throw err;
         console.log('# File saved at: ' + path);
         }
     );
 }
 
+// Check if optional cache flag is passed   
 function checkCacheFlag(request, response, next){
     request.app.cacheFlag = (request.headers['custom-cache-data']==1) ? true : false
     next();
 }
 
-async function make_GETRequest(url, max_retries, headers, params){
-    // function to make typical GET request
+// Make typical GET request
+async function make_GETRequest(url, headers, params, max_retries=5){
     let current_tries = 1
     while(current_tries <= max_retries) {
-        // try 5 times before giving up
-        let response = await axios({
-            url: url,
+        let res = await axios({
+            url,
             method: 'get',
-            headers: headers,
+            headers,
             params
         })
-        if(response.status == 200)
-            return response
+        if(res.status == 200)
+            return res
         current_tries+=1
     }
-    return response
+    return res
 }
 
-function clearCoinlist(raw_data) {
+// Extract the wanted data from the response
+function extractCoinlist(raw_data) {
     return raw_data.map( (item) => {
         return {name: item.name, symbol: item.symbol}
     })
 }
 
+// true: not letter / false: letter
 function notletterCheck(c) {
-    // true: not letter / false: letter
     let cval = c.charCodeAt(0)
     return (cval<'A'.charCodeAt(0) || cval>'z'.charCodeAt(0))
 }
 
+// Text processing of the comments
 function clearRedditResponse(raw_data) {
     // input: reddit response with post comments
     // return: { unique set of ids, array of cleared sentence tokens }
@@ -59,7 +62,7 @@ function clearRedditResponse(raw_data) {
         return {id: item.id, created_utc: item.created_utc, body: item.body}
     })
 
-    // template: array of {id , created_utc, body}
+    // Template: array of {id, created_utc, body}
     for(let pair of comms){
         pair.body = pair.body.replace(link_regex,'').replace(regex, "").replace(/\s+/g, " ");   // clear punctuation
         let arr = pair.body.split(/\s|\b/)
@@ -77,55 +80,52 @@ function clearRedditResponse(raw_data) {
     return comms
 }
 
+// Get the daily discussion submissions of the last <day_count> days
 async function GET_DailyDiscussions(day_count) {
-    // get the daily discussion submissions of the last <day_count> days
     const url = "https://api.pushshift.io/reddit/search/submission/"
-    const reddit_author = "AutoModerator"       // hardcode "automoderator" as author to only get the daily discussion!
+    const reddit_author = "AutoModerator"           // hardcode "automoderator" as author to only get the daily discussion!
     let after = day_count+"d"
     const params = {
         "after": after,
         "subreddit": "CryptoCurrency",
         "author": reddit_author
     }
-    let response = await make_GETRequest(url, 3, null, params)
-    return response.data.data       // return the data array
+    const response = await make_GETRequest(url, null, params)
+    return response.data.data
 }
 
+// For testing, in case PushShift is down - returns the last daily available in the system
 async function GET_dailydisc_test(){
-    // for testing, in case PushShift is down
     const url = "https://api.pushshift.io/reddit/search/submission/"
-    const reddit_author = "AutoModerator"       // hardcode "automoderator" as author to only get the daily discussion!
+    const reddit_author = "AutoModerator"
     const params = {
         "subreddit": "CryptoCurrency",
         "author": reddit_author
     }
-    let response = await make_GETRequest(url, 3, null, params)
+    const response = await make_GETRequest(url, null, params)
     let data = response.data.data
 
-    // return either the first entry, or empty array
     if(data.length > 0)
         return [data[0]]
     else
         return []
 }
 
-async function GET_AllRedditComments(day_count, ht) {
-    // get all the comments for the specified days given - here we assume for now day_count=1
+// Get all the comments for the specified days
+async function GET_DailyComments(ht, day_count=1) {
     // input: day_count=number of daily discussions to scrap / ht=hashtable to store comments
     // output: hashtabe with all comments
 
-    // set constants
-    day_count = 1   // fix!
     console.log("# Getting daily discussion list.")
     // const daily_discussions = await GET_DailyDiscussions(day_count)
-    const daily_discussions = await GET_dailydisc_test()        // for testing, in case PushShift is down
+    const daily_discussions = await GET_dailydisc_test()
     if(daily_discussions.length == 0){
         console.log("# No daily discussions for the day range given.")
         return ht
     }
     const url = "https://api.pushshift.io/reddit/search/comment/"
-    const max_size = 100        // important! always check the official API and update if changed
-    const max_iter = 20         // max iteration to end search - for testing
+    const max_size = 100            // important! always check the official API and update if changed
+    const max_iter = 2              // max iteration to end search - for testing
 
     // handle requests
     let params = {
@@ -137,25 +137,30 @@ async function GET_AllRedditComments(day_count, ht) {
 
         params.before = Date.now()
         params.link_id = post_id
-        const response = await make_GETRequest(url, 2, null, params)
+        const response = await make_GETRequest(url, null, params)
         let data = response.data.data
         let count = 0
-        while(data != undefined && data.length == max_size && count < max_iter){
+        while(data !== undefined && data.length === max_size && count < max_iter){
             const comments = clearRedditResponse(data) 
             await ht.populate(comments)
 
             // fix next iteration
             params.before = data[data.length-1].created_utc
-            const response = await make_GETRequest(url, 2, null, params)
+            const response = await make_GETRequest(url, null, params)
             data = response.data.data
-            setTimeout(() => {  count+= 1;  }, 500);        // wait a little to request again
+            setTimeout(() => {  count += 1;  }, 500);
         }
 
         return ht
     }
 }
 
-
-// export all functions
-module.exports = 
-{ saveJSON:saveJSON, checkCacheFlag:checkCacheFlag, make_GETRequest:make_GETRequest, clearCoinlist:clearCoinlist, clearRedditResponse:clearRedditResponse, GET_AllRedditComments:GET_AllRedditComments, GET_dailydisc_test:GET_dailydisc_test };
+module.exports = { 
+    saveJSON,
+    checkCacheFlag,
+    make_GETRequest,
+    extractCoinlist,
+    clearRedditResponse,
+    GET_DailyComments,
+    GET_dailydisc_test 
+};

@@ -1,15 +1,9 @@
-// module.exports = 
-
 // helping functions
-function alphaVal(s) {
+const alphaVal = (s) => {
     return s.toLowerCase().charCodeAt(0) - 97
 }
 
-function stringComp(s1, s2) {
-    return s1.toLowerCase() === s2.toLowerCase()
-}
-
-function arraySort(data, column) {
+const arraySort = (data, column) => {
     data.sort(function(res01, res02) {
         var arg01 = res01[column];
         var arg02 = res02[column];
@@ -21,7 +15,6 @@ function arraySort(data, column) {
 }
 
 /* ---------------------------------------------------*/
-// class
 module.exports = class AB_HashTable {
     // hashtable that stores strings alphabetically
     constructor(){

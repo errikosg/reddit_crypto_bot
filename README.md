@@ -1,6 +1,6 @@
 ## Reddit crypto bot
 
-#### Summary (v. 1.0.0)
+#### Summary (v. 1.0.1)
 A simple server that explores the "Daily Discussions" post of the subreddit "CryptoCurrency" and find word frequency of the cryptocurrencies that are mentioned by redditors, in order for trends to be found.
 
 #### ## Installing prerequisites
