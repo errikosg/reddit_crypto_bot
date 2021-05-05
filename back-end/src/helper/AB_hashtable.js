@@ -52,9 +52,11 @@ module.exports = class AB_HashTable {
                 this.unique_id_set.add(pair.id)
                 let comment_body = pair.body
                 for(let word of comment_body){
-                    if(word[0] == undefined)
+                    if(word[0] === undefined)
                         continue
                     const index = alphaVal(word[0])
+                    if(index < 0)
+                        continue
                     if(word in this.indexArray[index]){
                         // word found, updating frequency
                         this.indexArray[index][word] += 1
@@ -77,8 +79,8 @@ module.exports = class AB_HashTable {
         // const symbol = obj.symbol.toLowerCase()
         const name = obj.name
         const symbol = obj.symbol
+        let freq = 0;
         const index = alphaVal(name[0])
-        var freq = 0;
 
         // below we make sure that both name and symbol are searched
         if(name in this.indexArray[index])
